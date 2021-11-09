@@ -1,4 +1,5 @@
 import express from "express"
+import createHttpError from "http-errors"
 
 import UserModel from "./schema.js"
 
@@ -16,27 +17,53 @@ usersRouter.post("/", async (req, res, next) => {
 
 usersRouter.get("/", async (req, res, next) => {
   try {
+    const users = await UserModel.find()
+    res.send(users)
   } catch (error) {
     next(error)
   }
 })
 
-usersRouter.get("/:id", async (req, res, next) => {
+usersRouter.get("/:userId", async (req, res, next) => {
   try {
+    const id = req.params.userId
+
+    const user = await UserModel.findById(id)
+    if (user) {
+      res.send(user)
+    } else {
+      next(createHttpError(404, `User with id ${id} not found!`))
+    }
   } catch (error) {
     next(error)
   }
 })
 
-usersRouter.put("/:id", async (req, res, next) => {
+usersRouter.put("/:userId", async (req, res, next) => {
   try {
+    const id = req.params.userId
+    const updatedUser = await UserModel.findByIdAndUpdate(id, req.body, { new: true })
+
+    if (updatedUser) {
+      res.send(updatedUser)
+    } else {
+      next(createHttpError(404, `User with id ${id} not found!`))
+    }
   } catch (error) {
     next(error)
   }
 })
 
-usersRouter.delete("/:id", async (req, res, next) => {
+usersRouter.delete("/:userId", async (req, res, next) => {
   try {
+    const id = req.params.userId
+
+    const deletedUser = await UserModel.findByIdAndDelete(id)
+    if (deletedUser) {
+      res.status(204).send()
+    } else {
+      next(createHttpError(404, `User with id ${id} not found!`))
+    }
   } catch (error) {
     next(error)
   }
